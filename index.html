@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Evan Bei Oil Paint Gallery</title>
+  <meta name="description" content="Digital oil paintings for sale. Buy ownership; the painting remains on display." />
+  <style>
+    :root{
+      --bg:#f7f7f5; --fg:#111; --muted:#666; --card:#fff; --line:#e7e7e2;
+      --btn:#111; --btnfg:#fff; --chip:#f0f0ea;
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--fg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      line-height:1.55;
+    }
+    a{color:inherit}
+    .wrap{max-width:1120px; margin:0 auto; padding:40px 18px 80px;}
+    header{display:flex; gap:18px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;}
+    .brand h1{margin:0; font-size:22px; letter-spacing:.2px;}
+    .brand p{margin:8px 0 0; color:var(--muted); max-width:72ch;}
+    .pillbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .chip{
+      background:var(--chip); border:1px solid var(--line); padding:8px 10px;
+      border-radius:999px; font-size:12px; color:#222;
+    }
+
+    .controls{margin:26px 0 14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    select, input{
+      background:#fff; border:1px solid var(--line); border-radius:999px;
+      padding:10px 12px; font-size:14px; outline:none;
+    }
+    input{min-width:220px}
+
+    .grid{display:grid; gap:14px; grid-template-columns: repeat(12, 1fr);}
+    .card{
+      grid-column: span 4;
+      background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+      overflow:hidden; box-shadow: 0 8px 24px rgba(0,0,0,.04);
+      display:flex; flex-direction:column;
+    }
+    @media (max-width: 980px){ .card{grid-column: span 6;} }
+    @media (max-width: 640px){ .card{grid-column: span 12;} }
+    .thumb{width:100%; aspect-ratio: 4 / 3; object-fit:cover; display:block; background:#ddd;}
+    .pad{padding:14px 14px 16px;}
+    .title{margin:0; font-size:16px;}
+    .meta{margin:6px 0 0; color:var(--muted); font-size:13px;}
+    .row{display:flex; justify-content:space-between; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;}
+    .tag{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      border:1px solid var(--line); background:#fff;
+    }
+    .price{font-weight:650;}
+    .btn{
+      appearance:none; border:none; border-radius:999px;
+      background:var(--btn); color:var(--btnfg);
+      padding:10px 12px; cursor:pointer; font-size:13px;
+    }
+    .btn:disabled{opacity:.45; cursor:not-allowed}
+    .tiny{font-size:12px; color:var(--muted)}
+    .hr{height:1px; background:var(--line); margin:26px 0;}
+    footer{color:var(--muted); font-size:12px;}
+
+    dialog{
+      width:min(760px, 96vw);
+      border:none; border-radius:22px; padding:0;
+      box-shadow: 0 24px 60px rgba(0,0,0,.25);
+    }
+    dialog::backdrop{background: rgba(0,0,0,.35);}
+    .modal{background:#fff; border-radius:22px; overflow:hidden;}
+    .modalHead{padding:16px 16px 12px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:10px;}
+    .modalHead h3{margin:0; font-size:16px;}
+    .modalBody{padding:14px 16px 16px;}
+    .cols{display:grid; grid-template-columns: 1fr 1fr; gap:12px;}
+    @media (max-width: 760px){ .cols{grid-template-columns: 1fr;} }
+    .box{border:1px solid var(--line); border-radius:16px; padding:12px; background:#fff;}
+    code, pre{
+      background:#0f172a; color:#e2e8f0; padding:10px 12px; border-radius:14px;
+      display:block; overflow:auto; font-size:12px; line-height:1.4;
+    }
+    .closeBtn{background:#fff; border:1px solid var(--line); border-radius:999px; padding:8px 10px; cursor:pointer;}
+    .list{margin:10px 0 0; padding-left:18px; color:#222}
+    .list li{margin:6px 0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>Evan Bei — Oil Paint Gallery</h1>
+        <p>
+          Digital oil paintings for sale. You purchase the <b>ownership title</b>; the painting stays on display as part of the archive.
+          After purchase, the listing remains visible and can be re-posted at a price chosen by the new owner.
+        </p>
+      </div>
+      <div class="pillbar">
+        <div class="chip">Ownership transfer + hash certificate</div>
+        <div class="chip">Three craft tiers: A.0 / 4.0 / 3.3</div>
+        <div class="chip">ETH + PayPal</div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <input id="q" placeholder="Search title / ID…" />
+      <select id="tier">
+        <option value="all">All tiers</option>
+        <option value="A.0">A.0</option>
+        <option value="4.0">4.0</option>
+        <option value="3.3">3.3</option>
+      </select>
+      <select id="status">
+        <option value="all">All status</option>
+        <option value="AVAILABLE">Available</option>
+        <option value="OWNED">Owned (on display)</option>
+      </select>
+    </div>
+
+    <section id="grid" class="grid"></section>
+
+    <div class="hr"></div>
+
+    <section class="box">
+      <h3 style="margin:0 0 6px; font-size:15px;">Craft tiers (art standard)</h3>
+      <ul class="list">
+        <li><b>A.0</b> — auto process dominant (system-led). Includes a short process note when delivered.</li>
+        <li><b>4.0</b> — semi-automatic. Human refinement reaches “art standard”.</li>
+        <li><b>3.3</b> — deeper manual intervention. More hand-led decisions and revisions.</li>
+      </ul>
+      <p class="tiny" style="margin:10px 0 0;">
+        Note: tiers describe the creation process, not an investment grade. Prices are explicit per work.
+      </p>
+    </section>
+
+    <div class="hr"></div>
+
+    <footer>
+      <div class="box">
+        <b>Terms (plain and visible)</b>
+        <ul class="list">
+          <li>Purchase transfers <b>ownership title</b> of the listed digital painting to the buyer.</li>
+          <li><b>Copyright remains with the artist</b> (unless a separate written agreement is made).</li>
+          <li>The artwork remains displayed on this site as part of the archive; the buyer agrees to ongoing public exhibition.</li>
+          <li>To buy: send the exact listed amount via ETH or PayPal, then email your payment proof + your delivery email + the Work ID.</li>
+          <li>After confirmation, the artist sends a <b>hash certificate</b> (SHA-256) and unique proof of ownership to the buyer’s email.</li>
+          <li>After purchase, the work stays listed as “Owned (on display)” and may be re-posted at a new price specified by the owner.</li>
+          <li>No refunds after certificate issuance (except proven duplicate payment or technical error).</li>
+          <li>Revolut payments: available on request via email (public payment link preferred; card number is not displayed).</li>
+        </ul>
+        <p class="tiny" style="margin:10px 0 0;">
+          Contact: <span id="contactEmail"></span> · gallery.evanbei.com · © Evan Bei · London · 2026
+        </p>
+      </div>
+    </footer>
+  </div>
+
+  <dialog id="dlg">
+    <div class="modal">
+      <div class="modalHead">
+        <h3 id="dlgTitle">Buy</h3>
+        <button class="closeBtn" id="close">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="cols">
+          <div class="box">
+            <b>Payment</b>
+            <p class="tiny" style="margin:8px 0 10px;">
+              Send the exact amount. Then email your proof + delivery email + Work ID.
+            </p>
+            <div class="tiny" id="payMeta"></div>
+            <pre id="payBlock"></pre>
+          </div>
+          <div class="box">
+            <b>What you receive</b>
+            <ul class="list">
+              <li>A hash certificate (SHA-256) tied to the delivered file + metadata.</li>
+              <li>A unique proof of ownership issued to your email.</li>
+              <li>The artwork remains publicly displayed; ownership is shown as “Owned (on display)”.</li>
+            </ul>
+            <b style="display:block; margin-top:10px;">Email template</b>
+            <pre id="emailTpl"></pre>
+          </div>
+        </div>
+
+        <div class="box" style="margin-top:12px;">
+          <b>Visible deal conditions</b>
+          <p class="tiny" style="margin:8px 0 0;">
+            By paying, you accept the site terms in the footer. If you need a custom contract (copyright transfer / licensing),
+            contact the artist before purchase.
+          </p>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    // ====== CONFIG ======
+    const CONTACT_EMAIL = "toptrust@gmail.com";
+
+    const PAYMENT = {
+      crypto: {
+        label: "Ethereum (ETH)",
+        network: "Ethereum Mainnet",
+        address: "0x3fdE6fF577D19a0A542bcCBDAF3490daea4Eb6D7",
+        note: "Send ETH on Ethereum mainnet only. Wrong-network transfers cannot be recovered."
+      },
+      paypal: {
+        label: "PayPal",
+        address: "toptrust@gmail.com",
+        note: "If possible, include the Work ID in the payment note."
+      }
+    };
+
+    // ====== WORKS (sorted A.0 → 4.0 → 3.3) ======
+    const WORKS = [
+      // A.0
+      { id:"EB-OP-001", title:"AllyPally Light",  tier:"A.0", price:"1.2 ETH", status:"AVAILABLE", img:"images/eb-op-001.jpg", year:"2026", note:"" },
+      { id:"EB-OP-002", title:"To Be",            tier:"A.0", price:"1.2 ETH", status:"AVAILABLE", img:"images/eb-op-002.jpg", year:"2026", note:"" },
+      { id:"EB-OP-003", title:"Match Heaven.",    tier:"A.0", price:"1.2 ETH", status:"AVAILABLE", img:"images/eb-op-003.jpg", year:"2026", note:"" },
+
+      // 4.0
+      { id:"EB-OP-006", title:"Winds Wander",     tier:"4.0", price:"2.4 ETH", status:"AVAILABLE", img:"images/eb-op-006.jpg", year:"2026", note:"" },
+      { id:"EB-OP-007", title:"Bule Light",       tier:"4.0", price:"2.4 ETH", status:"AVAILABLE", img:"images/eb-op-007.jpg", year:"2026", note:"" },
+      { id:"EB-OP-008", title:"Tides of Wolmido", tier:"4.0", price:"2.4 ETH", status:"AVAILABLE", img:"images/eb-op-008.jpg", year:"2026", note:"" },
+      { id:"EB-OP-009", title:"Voice Begins",     tier:"4.0", price:"2.4 ETH", status:"AVAILABLE", img:"images/eb-op-009.jpg", year:"2026", note:"" },
+
+      // 3.3
+      { id:"EB-OP-004", title:"114",              tier:"3.3", price:"4.8 ETH", status:"AVAILABLE", img:"images/eb-op-004.jpg", year:"2026", note:"" },
+      { id:"EB-OP-005", title:"Glory Decends",    tier:"3.3", price:"4.8 ETH", status:"AVAILABLE", img:"images/eb-op-005.jpg", year:"2026", note:"" }
+    ];
+
+    // ====== UI ======
+    const grid = document.getElementById("grid");
+    const q = document.getElementById("q");
+    const tier = document.getElementById("tier");
+    const status = document.getElementById("status");
+    const dlg = document.getElementById("dlg");
+    const close = document.getElementById("close");
+
+    document.getElementById("contactEmail").textContent = CONTACT_EMAIL;
+
+    function card(w){
+      const disabled = (w.status !== "AVAILABLE");
+      return `
+        <article class="card" data-id="${w.id}">
+          <img class="thumb" src="${w.img}" alt="${escapeHtml(w.title)}" loading="lazy" />
+          <div class="pad">
+            <h2 class="title">${escapeHtml(w.title)}</h2>
+            <div class="meta">${w.id} · ${w.year} · <span class="tag">${w.tier}</span> · <span class="tag">${w.status}</span></div>
+            <div class="row">
+              <div class="price">${escapeHtml(w.price)}</div>
+              <button class="btn" ${disabled ? "disabled" : ""} onclick="openBuy('${w.id}')">
+                ${disabled ? "On display" : "Buy"}
+              </button>
+            </div>
+            ${w.note ? `<div class="tiny" style="margin-top:8px;">${escapeHtml(w.note)}</div>` : `<div class="tiny" style="margin-top:8px;"></div>`}
+          </div>
+        </article>
+      `;
+    }
+
+    function render(){
+      const term = q.value.trim().toLowerCase();
+      const t = tier.value;
+      const s = status.value;
+
+      const filtered = WORKS.filter(w=>{
+        const hit = (w.title.toLowerCase().includes(term) || w.id.toLowerCase().includes(term));
+        const hitTier = (t === "all" ? true : w.tier === t);
+        const hitStatus = (s === "all" ? true : w.status === s);
+        return hit && hitTier && hitStatus;
+      });
+
+      grid.innerHTML = filtered.map(card).join("");
+    }
+
+    function openBuy(id){
+      const w = WORKS.find(x=>x.id===id);
+      if(!w) return;
+
+      document.getElementById("dlgTitle").textContent = `Buy — ${w.title} (${w.id})`;
+
+      document.getElementById("payMeta").innerHTML = `
+        <div><b>Work:</b> ${w.id} · Tier ${w.tier} · Price <b>${escapeHtml(w.price)}</b></div>
+        <div style="margin-top:6px;"><b>Methods:</b> ETH or PayPal</div>
+      `;
+
+      document.getElementById("payBlock").textContent =
+`Option A — ETH
+Send: ${w.price}
+To:   ${PAYMENT.crypto.address}
+Net:  ${PAYMENT.crypto.network}
+Note: ${PAYMENT.crypto.note}
+
+Option B — PayPal
+PayPal: ${PAYMENT.paypal.address}
+Note:   ${PAYMENT.paypal.note}
+
+Then email:
+- payment proof (tx hash or PayPal receipt)
+- your delivery email
+- work ID: ${w.id}`;
+
+      document.getElementById("emailTpl").textContent =
+`Subject: Purchase — ${w.id}
+
+Hello Evan Bei,
+
+I purchased: ${w.title} (${w.id})
+Tier: ${w.tier}
+Price: ${w.price}
+
+Payment method: [ETH / PayPal]
+Proof (tx hash or receipt): [paste here]
+
+Please issue the hash certificate and ownership proof to:
+Email: [your email]
+
+Thank you.`;
+
+      dlg.showModal();
+    }
+
+    close.addEventListener("click", ()=>dlg.close());
+    q.addEventListener("input", render);
+    tier.addEventListener("change", render);
+    status.addEventListener("change", render);
+
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, (m)=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
+    }
+
+    window.openBuy = openBuy;
+    render();
+  </script>
+</body>
+</html>
